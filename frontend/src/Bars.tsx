@@ -14,22 +14,28 @@
  *  https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Canvas } from '@react-three/fiber';
-import Interface from './interface/Interface';
-import Game from './Game';
-import useGame from './stores/store';
+import * as THREE from 'three';
 
-const App = () => {
-  const { isMobile } = useGame((state) => state);
+const squareGeometry = new THREE.CapsuleGeometry(0.4, 21, 4, 8);
+const barMaterial = new THREE.MeshStandardMaterial({ color: '#3b0873' });
 
+const Bars = () => {
   return (
     <>
-      <Interface />
-      <Canvas camera={{ fov: 75, position: [0, 0, isMobile ? 40 : 30] }}>
-        <Game />
-      </Canvas>
+      <mesh
+        position={[0, 3.7, 10.5]}
+        rotation={[0, 0, Math.PI / 2]}
+        geometry={squareGeometry}
+        material={barMaterial}
+      />
+      <mesh
+        position={[0, -3.7, 10.5]}
+        rotation={[0, 0, Math.PI / 2]}
+        geometry={squareGeometry}
+        material={barMaterial}
+      />
     </>
   );
 };
 
-export default App;
+export default Bars;

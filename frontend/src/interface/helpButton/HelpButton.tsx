@@ -14,22 +14,17 @@
  *  https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Canvas } from '@react-three/fiber';
-import Interface from './interface/Interface';
-import Game from './Game';
-import useGame from './stores/store';
+import useGame from '../../stores/store';
+import './style.css';
 
-const App = () => {
-  const { isMobile } = useGame((state) => state);
+const HelpButton = () => {
+  const { setModal } = useGame();
 
-  return (
-    <>
-      <Interface />
-      <Canvas camera={{ fov: 75, position: [0, 0, isMobile ? 40 : 30] }}>
-        <Game />
-      </Canvas>
-    </>
-  );
+  const handleHelp = () => {
+    setModal(true);
+  };
+
+  return <div onClick={handleHelp} className="help-button" />;
 };
 
-export default App;
+export default HelpButton;

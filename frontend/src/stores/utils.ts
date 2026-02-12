@@ -14,22 +14,9 @@
  *  https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Canvas } from '@react-three/fiber';
-import Interface from './interface/Interface';
-import Game from './Game';
-import useGame from './stores/store';
+const lsGet = (key: string) => window.localStorage.getItem(key);
+const lsSet = (key: string, value: string | number | boolean) =>
+  window.localStorage.setItem(key, String(value));
+const lsClear = () => window.localStorage.clear();
 
-const App = () => {
-  const { isMobile } = useGame((state) => state);
-
-  return (
-    <>
-      <Interface />
-      <Canvas camera={{ fov: 75, position: [0, 0, isMobile ? 40 : 30] }}>
-        <Game />
-      </Canvas>
-    </>
-  );
-};
-
-export default App;
+export { lsGet, lsSet, lsClear };

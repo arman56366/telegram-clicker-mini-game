@@ -14,22 +14,12 @@
  *  https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Canvas } from '@react-three/fiber';
-import Interface from './interface/Interface';
-import Game from './Game';
-import useGame from './stores/store';
-
-const App = () => {
-  const { isMobile } = useGame((state) => state);
-
+export default function Lights() {
   return (
     <>
-      <Interface />
-      <Canvas camera={{ fov: 75, position: [0, 0, isMobile ? 40 : 30] }}>
-        <Game />
-      </Canvas>
+      <directionalLight position={[-2, 3, 2]} intensity={2} />
+      <directionalLight position={[2, 3, 2]} intensity={2} />
+      <ambientLight intensity={3} />
     </>
   );
-};
-
-export default App;
+}

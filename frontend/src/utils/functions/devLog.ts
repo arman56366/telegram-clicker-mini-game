@@ -14,22 +14,25 @@
  *  https://www.gnu.org/licenses/agpl-3.0.html
  */
 
-import { Canvas } from '@react-three/fiber';
-import Interface from './interface/Interface';
-import Game from './Game';
-import useGame from './stores/store';
+/**
+ * Logs a message in console only when in development environments
+ *
+ * @param message - The text to be logged in console
+ */
+const devLog = (message: string): void => {
+  // Get the current page URL
+  const url = window.location.href;
 
-const App = () => {
-  const { isMobile } = useGame((state) => state);
+  // Check if the URL is the production URL
+  const domain = 'cherrycharm';
 
-  return (
-    <>
-      <Interface />
-      <Canvas camera={{ fov: 75, position: [0, 0, isMobile ? 40 : 30] }}>
-        <Game />
-      </Canvas>
-    </>
-  );
+  // Only log in console if in development
+  if (url.indexOf(domain) === -1) {
+    console.log(message);
+    return;
+  } else {
+    return;
+  }
 };
 
-export default App;
+export default devLog;
