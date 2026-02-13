@@ -100,10 +100,10 @@ const SlotMachine = forwardRef<SlotMachineHandle>((_props, ref) => {
     }
   }, [bet, setFruit0, setFruit1, setFruit2, setWin, updateCoins, payTable]);
 
-  const handleSpinClick = () => {
+  const handleSpinClick = useCallback(() => {
     if (phase !== 'idle' || coins < bet) return;
     start();
-  };
+  }, [phase, coins, bet, start]);
 
   // 🎬 Запуск спина при смене фазы
   useEffect(() => {
@@ -160,7 +160,7 @@ const SlotMachine = forwardRef<SlotMachineHandle>((_props, ref) => {
   // ⌨ управление пробелом
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && phase === 'idle' && coins >= bet) {
+      if (e.code === 'Space' && phase === 'idle') {
         handleSpinClick();
       }
     };
