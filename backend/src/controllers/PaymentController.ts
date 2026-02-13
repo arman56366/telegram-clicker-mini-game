@@ -1,17 +1,20 @@
 import { Request, Response } from 'express';
 import { PaymentModel } from '../models/PaymentModel';
+import { UserModel } from '../models/UserModel';
 import { Pool } from 'pg';
 
 export class PaymentController {
     private paymentModel: PaymentModel;
+    private userModel: UserModel;
 
     constructor(pool: Pool) {
         this.paymentModel = new PaymentModel(pool);
+        this.userModel = new UserModel(pool);
     }
 
-    // Create Payment
+    // Create Payment (фронтенд отправляет запрос на создание платежа)
     async createPayment(req: Request, res: Response) {
-        const { userId, paymentType, amount } = req.body;
+        const { userId, paymentType, amount, walletAddress, userWallet } = req.body;
         try {
             // Валидация входных данных
             if (!userId || typeof userId !== 'number' || userId <= 0) {
@@ -23,52 +26,85 @@ export class PaymentController {
             if (!amount || typeof amount !== 'number' || amount <= 0) {
                 return res.status(400).json({ error: 'Invalid amount' });
             }
-            if (paymentType === 'ton' && !req.body.walletAddress) {
-                return res.status(400).json({ error: 'Wallet address required for TON payment' });
+            if (paymentType === 'ton' && !userWallet) {
+                return res.status(400).json({ error: 'User wallet address required for TON payment' });
             }
 
-            // Check user balance
-            let balance: number;
-            if (paymentType === 'stars') {
-                balance = await this.paymentModel.checkTelegramStarsBalance(userId);
-            } else if (paymentType === 'ton') {
-                const walletAddress = req.body.walletAddress; // TON wallet address
-                balance = await this.paymentModel.checkTONBalance(walletAddress);
-            } else {
-                return res.status(400).json({ error: 'Invalid payment type' });
-            }
-
-            // Check if enough balance
-            if (balance < amount) {
-                return res.status(400).json({ error: 'Insufficient balance' });
-            }
-
-            // Create Payemnt Entity
+            // Create Payment
             const payment = await this.paymentModel.createPayment(userId, paymentType, amount);
 
-            // Wait for Payment
-            let paymentSuccess: boolean;
-            if (paymentType === 'stars') {
-                paymentSuccess = await this.paymentModel.waitForTelegramStarsPayment(payment.id);
-            } else if (paymentType === 'ton') {
-                const walletAddress = req.body.walletAddress;
-                paymentSuccess = await this.paymentModel.waitForTONPayment(walletAddress, amount);
-            } else {
-                return res.status(400).json({ error: 'Invalid payment type' });
-            }
+            // Start verification in background
+            this.verifyPaymentInBackground(payment.id, userId, paymentType, amount, walletAddress, userWallet);
 
-            if (paymentSuccess) {
-                // Update payment status
-                await this.paymentModel.updatePaymentStatus(payment.id, 'completed');
-                res.status(200).json({ message: 'Payment successful', payment });
-            } else {
-                // Update payment status
-                await this.paymentModel.updatePaymentStatus(payment.id, 'failed');
-                res.status(400).json({ error: 'Payment failed' });
-            }
+            res.status(200).json({ 
+                message: 'Payment created, verification in progress', 
+                paymentId: payment.id,
+                payment: payment
+            });
         } catch (error) {
+            console.error('Error creating payment:', error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
+    }
+
+    // Background payment verification
+    private async verifyPaymentInBackground(
+        paymentId: number,
+        userId: number,
+        paymentType: string,
+        amount: number,
+        walletAddress?: string,
+        userWallet?: string
+    ) {
+        const maxAttempts = 60; // Check for 60 * 2 = 120 seconds (2 minutes)
+        let attempts = 0;
+
+        const interval = setInterval(async () => {
+            attempts++;
+
+            try {
+                let paymentSuccess = false;
+
+                if (paymentType === 'stars') {
+                    // For Telegram Stars
+                    paymentSuccess = await this.paymentModel.waitForTelegramStarsPayment(paymentId);
+                } else if (paymentType === 'ton' && userWallet) {
+                    // For TON blockchain
+                    paymentSuccess = await this.paymentModel.waitForTONPayment(userWallet, amount, walletAddress || '');
+                }
+
+                if (paymentSuccess) {
+                    // Payment confirmed - update status and add coins
+                    await this.paymentModel.updatePaymentStatus(paymentId, 'completed');
+                    
+                    // Convert payment amount to coins
+                    // 1 TON = 1000 coins, 1 Star = 10 coins (adjust as needed)
+                    const coinsToAdd = paymentType === 'ton' 
+                        ? amount * 1000 
+                        : Math.floor(amount * 10);
+                    
+                    await this.paymentModel.addCoinsToUser(userId, coinsToAdd);
+
+                    console.log(`Payment ${paymentId} verified successfully. Added ${coinsToAdd} coins to user ${userId}`);
+                    clearInterval(interval);
+                    return;
+                }
+
+                // If max attempts reached, mark as failed
+                if (attempts >= maxAttempts) {
+                    await this.paymentModel.updatePaymentStatus(paymentId, 'failed');
+                    console.log(`Payment ${paymentId} verification timeout`);
+                    clearInterval(interval);
+                }
+            } catch (error) {
+                console.error(`Error verifying payment ${paymentId}:`, error);
+                
+                if (attempts >= maxAttempts) {
+                    await this.paymentModel.updatePaymentStatus(paymentId, 'failed');
+                    clearInterval(interval);
+                }
+            }
+        }, 2000); // Check every 2 seconds
     }
 
     // Get user payments
@@ -78,18 +114,24 @@ export class PaymentController {
             const payments = await this.paymentModel.getPaymentsByUserId(Number(userId));
             res.status(200).json(payments);
         } catch (error) {
+            console.error('Error getting payments:', error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
 
-    // Update user payment
+    // Update user payment status (for admin operations)
     async updatePaymentStatus(req: Request, res: Response) {
         const { id } = req.params;
         const { status } = req.body;
         try {
+            if (!['pending', 'completed', 'failed'].includes(status)) {
+                return res.status(400).json({ error: 'Invalid status' });
+            }
+
             const payment = await this.paymentModel.updatePaymentStatus(Number(id), status);
             res.status(200).json(payment);
         } catch (error) {
+            console.error('Error updating payment status:', error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
