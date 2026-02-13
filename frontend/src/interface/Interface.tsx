@@ -22,7 +22,7 @@ import './style.css';
 
 const Interface = () => {
   const { modal, coins, win, bet, phase, updateBet } = useGame(
-    (state) => state
+    (state any) => state
   );
   const animatedCoins = useAnimatedNumber(coins);
   return (
@@ -42,7 +42,7 @@ const Interface = () => {
           <img className="logo" src="./images/logo.png" alt="" />
         </a>
 
-        <div id="version">{__APP_VERSION__}</div>
+        <div id="version">{"1.0.0"}</div>
       </div>
 
       <div className="interface">
