@@ -8,6 +8,7 @@ import useGame from '../stores/store';
 import HelpModal from './helpModal/HelpModal';
 import HelpButton from './helpButton/HelpButton';
 import PaymentModal from '../components/Payment/PaymentModal';
+import PayLine from '../components/PayLine';
 import useAnimatedNumber from '../hooks/useAnimatedNumber';
 import './style.css';
 
@@ -31,6 +32,9 @@ const Interface = () => {
       </div>
 
       <div className="interface">
+      {/* Линия выигрыша */}
+        <PayLine />
+
       {/* Баланс монет */}
         <div className="coins-section">
           <div className="coins-number">{animatedCoins}</div>

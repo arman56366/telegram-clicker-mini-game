@@ -24,8 +24,8 @@ const Reel = forwardRef((props: any, ref: ForwardedRef<THREE.Group>) => {
 
   return (
     <group {...props} dispose={null}>
-      {/* SlotMachine крутит rotation.x именно этой группы */}
-      <group ref={ref} rotation={[0, 0, -Math.PI / 2]} scale={[1, 0.29, 1]}>
+      {/* Повернули на 90 градусов по Z чтобы цилиндр был горизонтальным для X-оси вращения */}
+      <group ref={ref} rotation={[0, 0, Math.PI / 2]} scale={[1, 0.29, 1]}>
         <mesh geometry={nodes.Cylinder.geometry}>
           {/* Используем textures[props.map] с фолбеком на первую текстуру */}
           <meshStandardMaterial 

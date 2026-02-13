@@ -1,4 +1,4 @@
-import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useRef, useEffect, forwardRef, useImperativeHandle, useCallback, createRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useGame from './stores/store';
@@ -11,13 +11,17 @@ interface ReelGroup extends THREE.Group {
   elapsedTime?: number;
 }
 
+interface SlotMachineHandle {
+  reelRefs: React.RefObject<ReelGroup | null>[];
+}
+
 const ITEMS = 6;
 const SEGMENT_ANGLE = (Math.PI * 2) / ITEMS;
 
 // ⚠ если будет лёгкое смещение — поменяй 1.57 на 1.55–1.6
 const MODEL_OFFSET = Math.PI / 2;
 
-const SlotMachine = forwardRef((_props, ref) => {
+const SlotMachine = forwardRef<SlotMachineHandle>((_props, ref) => {
   const {
     phase,
     start,
@@ -32,11 +36,11 @@ const SlotMachine = forwardRef((_props, ref) => {
     setFruit2
   } = useGame((state: any) => state);
 
-  const reelRefs = [
-    useRef<ReelGroup>(null),
-    useRef<ReelGroup>(null),
-    useRef<ReelGroup>(null),
-  ];
+  const reelRefs = useRef([
+    createRef<ReelGroup>(),
+    createRef<ReelGroup>(),
+    createRef<ReelGroup>(),
+  ]).current;
 
   const spinInitiated = useRef(false);
   const phaseRef = useRef(phase);
@@ -48,7 +52,7 @@ const SlotMachine = forwardRef((_props, ref) => {
   const payTable = [50, 20, 15, 10, 5, 2];
 
   // 🎰 Генерация результатов
-  const generateSpinResults = () => {
+  const generateSpinResults = useCallback(() => {
     const randomValue = Math.random();
     let res: number[] = [0, 0, 0];
     let prize = 0;
@@ -94,7 +98,7 @@ const SlotMachine = forwardRef((_props, ref) => {
         updateCoins(prize);
       }, 4200);
     }
-  };
+  }, [bet, setFruit0, setFruit1, setFruit2, setWin, updateCoins, payTable]);
 
   const handleSpinClick = () => {
     if (phase !== 'idle' || coins < bet) return;
@@ -113,7 +117,7 @@ const SlotMachine = forwardRef((_props, ref) => {
     if (phase === 'idle') {
       spinInitiated.current = false;
     }
-  }, [phase]);
+  }, [phase, addSpin, setWin, generateSpinResults]);
 
   // 🎥 Анимация
   useFrame((_state, delta) => {
@@ -156,14 +160,14 @@ const SlotMachine = forwardRef((_props, ref) => {
   // ⌨ управление пробелом
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && phase === 'idle') {
+      if (e.code === 'Space' && phase === 'idle' && coins >= bet) {
         handleSpinClick();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [phase, coins, bet]);
+  }, [phase, coins, bet, start]);
 
   useImperativeHandle(ref, () => ({ reelRefs }));
 

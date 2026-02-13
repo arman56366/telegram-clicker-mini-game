@@ -16,16 +16,18 @@ export const Clicker = ({ onClick }: Props) => {
     setCoins((prev) => prev + 1)
     setLocalClicks((prev) => prev + 1)
 
-    // If collected 20 coins - Send to API
+    // If collected 20 clicks - Send to API
     if (localClicks + 1 >= 20) {
       try {
         setIsLoading(true)
+        // Отправляем текущее количество монет (ПОСЛЕ увеличения на 1)
+        const coinsToSend = coins + 1
         const response = await fetch("/api/click", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ coins: coins + 20 }), // Send total coins
+          body: JSON.stringify({ coins: coinsToSend }),
         })
 
         if (!response.ok) {

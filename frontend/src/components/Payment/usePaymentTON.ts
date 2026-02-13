@@ -13,7 +13,7 @@ export function usePaymentTON() {
 
     setConnector(tonConnect)
 
-    // Sunscribe on wallet's state change
+    // Subscribe on wallet's state change
     tonConnect.onStatusChange((wallet) => {
       if (wallet) {
         console.log("Wallet connected:", wallet)
@@ -23,7 +23,12 @@ export function usePaymentTON() {
     })
 
     return () => {
-      tonConnect.disconnect()
+      // Safe disconnect - only if wallet is connected
+      if (tonConnect.wallet) {
+        tonConnect.disconnect().catch(err => {
+          console.warn("Error disconnecting TON wallet:", err)
+        })
+      }
     }
   }, [])
 
