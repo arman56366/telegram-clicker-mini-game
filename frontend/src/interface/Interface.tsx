@@ -10,8 +10,8 @@ import useAnimatedNumber from '../hooks/useAnimatedNumber';
 import './style.css';
 
 const Interface = () => {
-  // ИСПРАВЛЕНО: добавлено двоеточие (state: any)
-  const { modal, coins, win, bet, phase, updateBet } = useGame(
+  // Добавляем 'start' в деструктуризацию, чтобы кнопка могла запускать игру
+  const { modal, coins, win, bet, phase, updateBet, start } = useGame(
     (state: any) => state
   );
   
@@ -65,6 +65,17 @@ const Interface = () => {
               ⏷
             </div>
           </div>
+        </div>
+
+        {/* КНОПКА SPIN — Добавлена сюда */}
+        <div className="spin-section">
+          <button 
+            className={`spin-button ${phase !== 'idle' ? 'disabled' : ''}`}
+            onClick={start}
+            disabled={phase !== 'idle' || coins < bet}
+          >
+            {phase === 'spinning' ? '...' : 'SPIN'}
+          </button>
         </div>
 
         {/* Win */}
