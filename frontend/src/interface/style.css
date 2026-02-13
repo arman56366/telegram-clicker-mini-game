@@ -1,15 +1,16 @@
 .interface {
   pointer-events: none;
-  z-index: 10; /* Подняли чуть выше */
+  z-index: 10;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   color: #fff;
+  font-family: 'Arial Black', Gadget, sans-serif;
 }
 
-/* Логотип */
+/* Логотип (верхний левый угол) */
 #logo-section {
   display: flex;
   flex-direction: column;
@@ -17,122 +18,111 @@
   top: 0;
   left: 0;
   z-index: 5;
-  margin: 0.5em;
-  pointer-events: none; /* Чтобы лого не мешало кликам */
+  margin: 1em;
+  pointer-events: none;
 }
 
 .logo {
-  width: min(250px, 20vw); /* Немного уменьшили для баланса */
+  width: min(250px, 20vw);
   transform: rotate(-5deg);
 }
 
 #version {
   color: #f7f7f7;
   font-family: monospace;
+  font-size: 12px;
   margin-left: 20px;
   animation: fadeOut 1s ease 10s forwards;
 }
 
-/* Секция выигрыша (Слева внизу) */
-.win-section {
+/* Общий контейнер для всех нижних элементов */
+.win-section, .coins-section, .spin-container, .bet-section {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  margin: 1em;
-  pointer-events: none;
+  pointer-events: auto; /* Возвращаем кликабельность кнопкам */
+}
+
+/* Выигрыш (слева внизу) */
+.win-section {
+  bottom: 20px;
+  left: 20px;
+  text-align: left;
 }
 
 .win-number {
-  font-size: min(50px, 8vw);
-  text-shadow: min(5px, 1vw) min(5px, 1vw) 0px #6913c5;
+  font-size: min(45px, 6vw);
+  text-shadow: 3px 3px 0px #6913c5;
 }
 
-/* Секция монет (Справа внизу) */
+/* Баланс (справа внизу) */
 .coins-section {
-  position: fixed;
-  bottom: 0;
-  right: 0;
+  bottom: 20px;
+  right: 20px;
   display: flex;
   align-items: center;
-  margin: 1em;
-  pointer-events: none;
 }
 
 .coins-number {
-  font-size: min(50px, 8vw);
-  text-shadow: min(5px, 1vw) min(5px, 1vw) 0px #6913c5;
+  font-size: min(45px, 6vw);
+  text-shadow: 3px 3px 0px #6913c5;
 }
 
 .coins-image {
-  width: min(55px, 8vw);
+  width: min(50px, 7vw);
   margin-left: 10px;
 }
 
-/* Контейнер для кнопки SPIN и СТАВКИ (Центр снизу) */
+/* Кнопка SPIN (центр) */
 .spin-container {
-  position: fixed;
-  bottom: 5%;
+  bottom: 80px; /* Поднимаем над ставкой */
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-  pointer-events: auto; /* Разрешаем клики */
   z-index: 20;
 }
 
-/* Стили кнопки SPIN */
 .spin-button {
   background: #ffc400;
   color: #6913c5;
   border: 4px solid #fff;
-  padding: 15px 50px;
-  font-size: min(40px, 7vw);
-  font-weight: bold;
+  padding: 15px 60px;
+  font-size: min(35px, 8vw);
+  font-weight: 900;
   border-radius: 50px;
   cursor: pointer;
-  box-shadow: 0 10px 0px #b48a00, 0 15px 25px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 0px #b48a00, 0 15px 20px rgba(0,0,0,0.4);
   transition: all 0.1s;
-  text-transform: uppercase;
 }
 
-.spin-button:hover {
-  background: #ffe066;
-  transform: translateY(-2px);
-}
-
-.spin-button:active {
-  transform: translateY(5px);
-  box-shadow: 0 5px 0px #b48a00;
+.spin-button:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 4px 0px #b48a00;
 }
 
 .spin-button:disabled {
   background: #888;
-  color: #ccc;
-  border-color: #aaa;
+  color: #aaa;
+  border-color: #666;
   box-shadow: none;
   cursor: not-allowed;
-  transform: translateY(5px);
+  transform: translateY(4px);
 }
 
-/* Секция ставки (под кнопкой SPIN) */
+/* Ставка (прямо под кнопкой SPIN) */
 .bet-section {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  font-size: min(45px, 7vw);
-  text-shadow: 3px 3px 0px #6913c5;
-  gap: 10px;
+  gap: 15px;
+  font-size: min(30px, 5vw);
+  text-shadow: 2px 2px 0px #6913c5;
 }
 
 .bet-control {
   font-size: 40px;
   cursor: pointer;
-  color: #fff;
-  text-shadow: 2px 2px 0px #6913c5;
   user-select: none;
+  transition: color 0.2s;
 }
 
 .bet-control:hover {
@@ -140,7 +130,7 @@
 }
 
 .hidden {
-  visibility: hidden;
+  display: none;
 }
 
 @keyframes fadeOut {
