@@ -12,7 +12,6 @@ import Bars from './Bars';
 import useGame from './stores/store';
 
 const Game = () => {
-  // Добавляем функции установки фруктов из стора
   const { 
     showBars, phase, end, setWin, updateCoins, bet, 
     setFruit0, setFruit1, setFruit2 
@@ -23,46 +22,41 @@ const Game = () => {
   useEffect(() => {
     if (phase === 'spinning') {
       const timer = setTimeout(() => {
-        // 1. Устанавливаем шанс выигрыша 20%
+        // ШАНС ВЫИГРЫША 20%
         const isWin = Math.random() < 0.2; 
 
         let f0, f1, f2;
-        let winAmount = 0;
-
-        // Таблица выплат (индексы фруктов)
+        // Таблица выплат из твоего изображения:
         // 0: Вишня (50), 1: Яблоко (20), 2: Банан (15), 3: Апельсин (5)
         const payTable = [50, 20, 15, 5, 2, 1]; 
 
         if (isWin) {
-          // ВЫИГРЫШ: Все три фрукта одинаковые
-          f0 = Math.floor(Math.random() * 4); // Выбираем из топ-4 (Вишня, Яблоко, Банан, Апельсин)
+          // Гарантируем победу: все три индекса одинаковые
+          f0 = Math.floor(Math.random() * 4); 
           f1 = f0;
           f2 = f0;
           
-          // Вычисляем сумму (выплата из таблицы * ставку)
-          winAmount = payTable[f0] * bet;
+          const prize = payTable[f0] || 0;
+          const totalWin = prize * bet;
           
-          setWin(winAmount);
-          updateCoins(winAmount);
-          console.log(`WIN! Combined: ${f0}-${f1}-${f2}. Prize: ${winAmount}`);
+          setWin(totalWin);
+          updateCoins(totalWin);
         } else {
-          // ПРОИГРЫШ: Гарантируем, что они разные
+          // Гарантируем проигрыш: первый и второй символы ВСЕГДА разные
           f0 = Math.floor(Math.random() * 6);
-          f1 = (f0 + 1 + Math.floor(Math.random() * 4)) % 6; // Всегда отличается от f0
+          f1 = (f0 + 1 + Math.floor(Math.random() * 4)) % 6; 
           f2 = Math.floor(Math.random() * 6);
           
           setWin(0);
-          console.log(`LOSE. Combined: ${f0}-${f1}-${f2}`);
         }
 
-        // 2. Записываем результаты в стор, чтобы SlotMachine зафиксировала их
+        // Обновляем фрукты в сторе
         setFruit0(f0);
         setFruit1(f1);
         setFruit2(f2);
 
-        // 3. Останавливаем вращение
+        // Завершаем вращение
         end();
-
       }, 2500);
 
       return () => clearTimeout(timer);
@@ -72,7 +66,7 @@ const Game = () => {
   return (
     <>
       <color args={['#141417']} attach="background" />
-      <OrbitControls />
+      <OrbitControls enableZoom={false} />
       <Lights />
       {showBars && <Bars />}
       <SlotMachine ref={slotMachineRef} />
