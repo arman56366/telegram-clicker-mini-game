@@ -10,8 +10,6 @@ type GLTFResult = GLTF & {
 
 const Reel = forwardRef((props: any, ref: ForwardedRef<THREE.Group>) => {
   const { nodes, materials } = useGLTF('/models/reel.glb') as unknown as GLTFResult;
-  
-  // Загружаем сразу все текстуры. Убедитесь, что пути /images/... верны.
   const textures = useTexture([
     '/images/reel_0.png',
     '/images/reel_1.png',
@@ -20,6 +18,7 @@ const Reel = forwardRef((props: any, ref: ForwardedRef<THREE.Group>) => {
 
   return (
     <group {...props} dispose={null}>
+      {/* ref ДОЛЖЕН БЫТЬ ЗДЕСЬ — это группа, которую мы будем крутить по X */}
       <group ref={ref} rotation={[0, 0, -Math.PI / 2]} scale={[1, 0.29, 1]}>
         <mesh geometry={nodes.Cylinder.geometry}>
           <meshStandardMaterial map={textures[props.map]} metalness={0.5} roughness={0.5} />
