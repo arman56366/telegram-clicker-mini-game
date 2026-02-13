@@ -29,59 +29,59 @@ const SlotMachine = forwardRef((_props, ref) => {
     useRef<ReelGroup>(null),
   ];
 
-  // Таблица выплат: 0-Cherry(50), 1-Apple(20), 2-Banana(15), 3-Orange(5), 4-Lemon(2), 5-Grape(1)
+  // Таблица выплат на основе загруженного изображения:
+  // 0-Cherry(50), 1-Apple(20), 2-Banana(15), 3-Orange(5), 4-Lemon(2), 5-Grape(1)
   const payTable = [50, 20, 15, 5, 2, 1];
 
   const spinSlotMachine = () => {
-    // Проверка условий: не крутим, если фаза spinning или недостаточно монет
+    // Проверка условий запуска и списание ставки
     if (phase === 'spinning' || coins < bet) return;
 
-    start(); // Меняет фазу на spinning и списывает bet (в store.ts)
+    start(); 
     addSpin();
-    setWin(0);
+    setWin(0); // Обнуляем выигрыш перед началом
 
     const randomValue = Math.random();
     let res: number[] = [0, 0, 0];
 
-    // --- ЛОГИКА ШАНСОВ ---
+    // --- ЛОГИКА ШАНСОВ И ВЕРОЯТНОСТЕЙ ---
     if (randomValue < 0.1) { 
-      // 1. ПОБЕДА (10%)
-      const winnerFruit = Math.floor(Math.random() * 4); // Берем более ценные фрукты
+      // 1. ПОБЕДА (10%): Все три барабана совпадают
+      const winnerFruit = Math.floor(Math.random() * 4); 
       res = [winnerFruit, winnerFruit, winnerFruit];
       
       const prize = (payTable[winnerFruit] || 1) * bet;
       
-      // Начисляем выигрыш в конце анимации (через 3.5 сек)
+      // Начисляем монеты после завершения анимации
       setTimeout(() => {
         setWin(prize);
         updateCoins(prize);
       }, 3500); 
 
     } else if (randomValue < 0.5) {
-      // 2. ВИЗУАЛЬНЫЙ ОБМАН / NEAR MISS (40%)
-      // Первый и третий барабаны совпадают, создавая иллюзию "почти выигрыша"
+      // 2. ВИЗУАЛЬНЫЙ ОБМАН (40%): Первый и третий совпадают, средний - нет
       const sideFruit = Math.floor(Math.random() * 6);
       const middleFruit = (sideFruit + 1 + Math.floor(Math.random() * 3)) % 6;
       res = [sideFruit, middleFruit, sideFruit];
 
     } else {
-      // 3. ПОЛНЫЙ ПРОИГРЫШ (50%)
+      // 3. ПОЛНЫЙ ПРОИГРЫШ (50%): Разные символы
       res[0] = Math.floor(Math.random() * 6);
       res[1] = (res[0] + 1) % 6; 
       res[2] = (res[1] + 1 + Math.floor(Math.random() * 2)) % 6;
     }
 
-    // Сохраняем результаты в стор
+    // Сохраняем индексы в стор (синхронизация с 2D UI)
     setFruit0(res[0]);
     setFruit1(res[1]);
     setFruit2(res[2]);
 
-    // --- ЗАПУСК АНИМАЦИИ ---
+    // --- НАСТРОЙКА ВРАЩЕНИЯ ---
     for (let i = 0; i < 3; i++) {
       const reel = reelRefs[i].current;
       if (reel) {
         const currentRot = reel.rotation.x;
-        // Каждый барабан делает разное кол-во кругов для поочередной остановки
+        // Каждому барабану добавляем обороты для каскадной остановки
         const fullSpins = (i + 4) * Math.PI * 2; 
         const segmentOffset = res[i] * (WHEEL_SEGMENT || 0.785398);
         
@@ -102,7 +102,7 @@ const SlotMachine = forwardRef((_props, ref) => {
       const remaining = reel.targetRotationX - reel.rotation.x;
 
       if (!reel.isSnapping) {
-        // Динамическая скорость на основе delta
+        // Скорость на основе delta для стабильности FPS
         const speed = Math.max(remaining * 4, 15) * delta;
         
         if (remaining > 0.1) {
@@ -111,7 +111,7 @@ const SlotMachine = forwardRef((_props, ref) => {
           reel.isSnapping = true;
         }
       } else {
-        // Мягкая докрутка до цели
+        // Плавная фиксация на нужном фрукте
         reel.rotation.x = THREE.MathUtils.lerp(reel.rotation.x, reel.targetRotationX, 0.12);
         
         if (Math.abs(reel.rotation.x - reel.targetRotationX) < 0.005) {
@@ -121,12 +121,12 @@ const SlotMachine = forwardRef((_props, ref) => {
       }
     }
 
+    // Завершаем фазу спина, когда все барабаны замерли
     if (allFinished && phase === 'spinning') {
-      end(); // Возвращает фазу в idle
+      end();
     }
   });
 
-  // Обработка нажатия пробела
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') spinSlotMachine();
