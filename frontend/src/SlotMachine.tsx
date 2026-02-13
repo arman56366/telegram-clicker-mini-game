@@ -3,7 +3,7 @@
  * GNU Affero General Public License v3.0
  */
 
-import { useRef, useEffect, forwardRef, useImperativeHandle, useState } from 'react';
+import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useGame from './stores/store';
@@ -29,90 +29,104 @@ const SlotMachine = forwardRef((_props, ref) => {
     useRef<ReelGroup>(null),
   ];
 
-  // Таблица выплат по индексам: 0-Cherry(50), 1-Apple(20), 2-Banana(15), 3-Orange(5)
+  // Таблица выплат: 0-Cherry(50), 1-Apple(20), 2-Banana(15), 3-Orange(5), 4-Lemon(2), 5-Grape(1)
   const payTable = [50, 20, 15, 5, 2, 1];
 
   const spinSlotMachine = () => {
+    // Проверка условий: не крутим, если фаза spinning или недостаточно монет
     if (phase === 'spinning' || coins < bet) return;
 
-    // 1. Сразу списываем ставку и запускаем фазу
-    start(); 
+    start(); // Меняет фазу на spinning и списывает bet (в store.ts)
     addSpin();
     setWin(0);
 
-    // 2. Генерируем результат: ШАНС ВЫИГРЫША 20%
-    const isWin = Math.random() < 0.2;
+    const randomValue = Math.random();
     let res: number[] = [0, 0, 0];
 
-    if (isWin) {
-      const winnerFruit = Math.floor(Math.random() * 4); // Только ценные фрукты
+    // --- ЛОГИКА ШАНСОВ ---
+    if (randomValue < 0.1) { 
+      // 1. ПОБЕДА (10%)
+      const winnerFruit = Math.floor(Math.random() * 4); // Берем более ценные фрукты
       res = [winnerFruit, winnerFruit, winnerFruit];
       
-      const prize = payTable[winnerFruit] * bet;
-      // Начисляем выигрыш сразу, но покажем его после остановки
+      const prize = (payTable[winnerFruit] || 1) * bet;
+      
+      // Начисляем выигрыш в конце анимации (через 3.5 сек)
       setTimeout(() => {
         setWin(prize);
         updateCoins(prize);
-      }, 3000); 
+      }, 3500); 
+
+    } else if (randomValue < 0.5) {
+      // 2. ВИЗУАЛЬНЫЙ ОБМАН / NEAR MISS (40%)
+      // Первый и третий барабаны совпадают, создавая иллюзию "почти выигрыша"
+      const sideFruit = Math.floor(Math.random() * 6);
+      const middleFruit = (sideFruit + 1 + Math.floor(Math.random() * 3)) % 6;
+      res = [sideFruit, middleFruit, sideFruit];
+
     } else {
-      // Генерируем проигрышную комбинацию
+      // 3. ПОЛНЫЙ ПРОИГРЫШ (50%)
       res[0] = Math.floor(Math.random() * 6);
-      res[1] = (res[0] + 1 + Math.floor(Math.random() * 3)) % 6; // Гарантированно другой
-      res[2] = Math.floor(Math.random() * 6);
+      res[1] = (res[0] + 1) % 6; 
+      res[2] = (res[1] + 1 + Math.floor(Math.random() * 2)) % 6;
     }
 
-    // Сохраняем в стор для синхронизации
+    // Сохраняем результаты в стор
     setFruit0(res[0]);
     setFruit1(res[1]);
     setFruit2(res[2]);
 
-    // 3. Настраиваем анимацию барабанов
+    // --- ЗАПУСК АНИМАЦИИ ---
     for (let i = 0; i < 3; i++) {
       const reel = reelRefs[i].current;
       if (reel) {
-        // Каждый барабан делает несколько полных кругов + смещение до нужного фрукта
-        const extraSpins = (i + 2) * 10; 
-        const targetSegment = res[i] + extraSpins;
+        const currentRot = reel.rotation.x;
+        // Каждый барабан делает разное кол-во кругов для поочередной остановки
+        const fullSpins = (i + 4) * Math.PI * 2; 
+        const segmentOffset = res[i] * (WHEEL_SEGMENT || 0.785398);
         
-        reel.targetRotationX = targetSegment * WHEEL_SEGMENT;
+        reel.targetRotationX = currentRot + fullSpins + segmentOffset;
         reel.isSnapping = false;
       }
     }
   };
 
   useFrame((_state, delta) => {
-    let allStopped = true;
+    let allFinished = true;
 
     for (let i = 0; i < reelRefs.length; i++) {
       const reel = reelRefs[i].current;
       if (!reel || reel.targetRotationX === undefined) continue;
 
-      allStopped = false;
-      const step = delta * 15; // Скорость вращения
+      allFinished = false;
+      const remaining = reel.targetRotationX - reel.rotation.x;
 
       if (!reel.isSnapping) {
-        if (reel.rotation.x < reel.targetRotationX - step) {
-          reel.rotation.x += step;
+        // Динамическая скорость на основе delta
+        const speed = Math.max(remaining * 4, 15) * delta;
+        
+        if (remaining > 0.1) {
+          reel.rotation.x += speed;
         } else {
           reel.isSnapping = true;
         }
       } else {
-        // Плавная докрутка в конце
-        reel.rotation.x = THREE.MathUtils.lerp(reel.rotation.x, reel.targetRotationX, 0.1);
-        if (Math.abs(reel.rotation.x - reel.targetRotationX) < 0.01) {
+        // Мягкая докрутка до цели
+        reel.rotation.x = THREE.MathUtils.lerp(reel.rotation.x, reel.targetRotationX, 0.12);
+        
+        if (Math.abs(reel.rotation.x - reel.targetRotationX) < 0.005) {
           reel.rotation.x = reel.targetRotationX;
           reel.targetRotationX = undefined;
         }
       }
     }
 
-    // Если все барабаны докрутились и мы были в фазе спина
-    if (allStopped && phase === 'spinning') {
-      end();
+    if (allFinished && phase === 'spinning') {
+      end(); // Возвращает фазу в idle
     }
   });
 
-  // Управление пробелом
+  // Обработка нажатия пробела
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') spinSlotMachine();
@@ -125,9 +139,9 @@ const SlotMachine = forwardRef((_props, ref) => {
 
   return (
     <>
-      <Reel ref={reelRefs[0]} map={0} position={[-7, 0, 0]} scale={[10, 10, 10]} reelSegment={0} />
-      <Reel ref={reelRefs[1]} map={1} position={[0, 0, 0]} scale={[10, 10, 10]} reelSegment={0} />
-      <Reel ref={reelRefs[2]} map={2} position={[7, 0, 0]} scale={[10, 10, 10]} reelSegment={0} />
+      <Reel ref={reelRefs[0]} map={0} position={[-7, 0, 0]} scale={[10, 10, 10]} />
+      <Reel ref={reelRefs[1]} map={1} position={[0, 0, 0]} scale={[10, 10, 10]} />
+      <Reel ref={reelRefs[2]} map={2} position={[7, 0, 0]} scale={[10, 10, 10]} />
       
       <Button
         scale={[0.05, 0.04, 0.04]}
