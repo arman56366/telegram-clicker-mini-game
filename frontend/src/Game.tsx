@@ -12,39 +12,62 @@ import Bars from './Bars';
 import useGame from './stores/store';
 
 const Game = () => {
-  // Добавляем phase и end для контроля вращения
-  const { showBars, phase, end, setWin, updateCoins, bet } = useGame((state: any) => state);
+  // Добавляем функции установки фруктов из стора
+  const { 
+    showBars, phase, end, setWin, updateCoins, bet, 
+    setFruit0, setFruit1, setFruit2 
+  } = useGame((state: any) => state);
 
   const slotMachineRef = useRef<THREE.Group | null>(null);
 
   useEffect(() => {
-    // Если игра перешла в фазу вращения
     if (phase === 'spinning') {
-      
-      // Устанавливаем таймер на 2.5 секунды
       const timer = setTimeout(() => {
-        // 1. Останавливаем вращение в сторе
-        end();
+        // 1. Устанавливаем шанс выигрыша 20%
+        const isWin = Math.random() < 0.2; 
 
-        // 2. ЛОГИКА ВЫИГРЫША (упрощенная для проверки)
-        // В будущем здесь будет проверка выпавших фруктов
-        const isWin = Math.random() > 0.7; // 30% шанс на успех
+        let f0, f1, f2;
+        let winAmount = 0;
+
+        // Таблица выплат (индексы фруктов)
+        // 0: Вишня (50), 1: Яблоко (20), 2: Банан (15), 3: Апельсин (5)
+        const payTable = [50, 20, 15, 5, 2, 1]; 
+
         if (isWin) {
-          const winAmount = bet * 5; // Выигрыш в 5 раз больше ставки
+          // ВЫИГРЫШ: Все три фрукта одинаковые
+          f0 = Math.floor(Math.random() * 4); // Выбираем из топ-4 (Вишня, Яблоко, Банан, Апельсин)
+          f1 = f0;
+          f2 = f0;
+          
+          // Вычисляем сумму (выплата из таблицы * ставку)
+          winAmount = payTable[f0] * bet;
+          
           setWin(winAmount);
           updateCoins(winAmount);
-          console.log("You won!");
+          console.log(`WIN! Combined: ${f0}-${f1}-${f2}. Prize: ${winAmount}`);
         } else {
+          // ПРОИГРЫШ: Гарантируем, что они разные
+          f0 = Math.floor(Math.random() * 6);
+          f1 = (f0 + 1 + Math.floor(Math.random() * 4)) % 6; // Всегда отличается от f0
+          f2 = Math.floor(Math.random() * 6);
+          
           setWin(0);
-          console.log("No win this time.");
+          console.log(`LOSE. Combined: ${f0}-${f1}-${f2}`);
         }
+
+        // 2. Записываем результаты в стор, чтобы SlotMachine зафиксировала их
+        setFruit0(f0);
+        setFruit1(f1);
+        setFruit2(f2);
+
+        // 3. Останавливаем вращение
+        end();
 
       }, 2500);
 
-      // Очистка таймера при размонтировании
       return () => clearTimeout(timer);
     }
-  }, [phase, end, bet, setWin, updateCoins]);
+  }, [phase, end, bet, setWin, updateCoins, setFruit0, setFruit1, setFruit2]);
 
   return (
     <>
@@ -52,8 +75,7 @@ const Game = () => {
       <OrbitControls />
       <Lights />
       {showBars && <Bars />}
-      {/* Передаем случайные значения для визуальной остановки, если SlotMachine это поддерживает */}
-      <SlotMachine ref={slotMachineRef} value={[1, 2, 3]} />
+      <SlotMachine ref={slotMachineRef} />
     </>
   );
 };
