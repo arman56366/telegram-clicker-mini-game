@@ -3,9 +3,11 @@
  * GNU Affero General Public License v3.0
  */
 
+import { useState } from 'react';
 import useGame from '../stores/store';
 import HelpModal from './helpModal/HelpModal';
 import HelpButton from './helpButton/HelpButton';
+import PaymentModal from '../components/Payment/PaymentModal';
 import useAnimatedNumber from '../hooks/useAnimatedNumber';
 import './style.css';
 
@@ -13,6 +15,7 @@ const Interface = () => {
   const { modal, coins, win, bet, phase, updateBet, start } = useGame(
     (state: any) => state
   );
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   
   const animatedCoins = useAnimatedNumber(coins);
 
@@ -28,10 +31,19 @@ const Interface = () => {
       </div>
 
       <div className="interface">
-        {/* Баланс монет */}
+      {/* Баланс монет */}
         <div className="coins-section">
           <div className="coins-number">{animatedCoins}</div>
           <img className="coins-image" src="./images/coin.png" alt="coin" />
+          
+          {/* Кнопка добавления монет */}
+          <button 
+            className="add-coins-btn"
+            onClick={() => setShowPaymentModal(true)}
+            title="Add coins with Telegram Stars or TON"
+          >
+            +
+          </button>
         </div>
 
         {/* Ставка и кнопки управления */}
@@ -49,8 +61,10 @@ const Interface = () => {
           <button 
             className="spin-button"
             onClick={(e) => {
-              e.stopPropagation(); // Останавливает всплытие клика
-              start();
+              e.stopPropagation();
+              if (phase === 'idle' && coins >= bet) {
+                start();
+              }
             }}
             disabled={phase !== 'idle' || coins < bet}
           >
@@ -63,6 +77,12 @@ const Interface = () => {
           <div className="win-number">WIN: {win}</div>
         </div>
       </div>
+
+      {/* Модальное окно платежа */}
+      <PaymentModal 
+        isOpen={showPaymentModal} 
+        onClose={() => setShowPaymentModal(false)} 
+      />
     </>
   );
 };
