@@ -38,7 +38,6 @@ type State = {
   setFirstTime: (isFirstTime: boolean) => void;
 };
 
-// Добавили (set: any)
 const useGame = create<State>()(
   subscribeWithSelector((set: any) => ({
     isMobile: window.innerWidth < 768,
@@ -46,45 +45,32 @@ const useGame = create<State>()(
 
     modal: false,
     setModal: (isOpen: boolean) => {
-      set(() => {
-        return { modal: isOpen };
-      });
+      set(() => ({ modal: isOpen }));
     },
 
     coins: 100,
     updateCoins: (amount: number) => {
-      // Добавили (state: any)
       set((state: any) => {
         const newCoins = state.coins + amount;
         return {
           coins: newCoins,
-          bet: state.bet > newCoins ? newCoins : state.bet,
+          bet: state.bet > newCoins ? Math.max(1, newCoins) : state.bet,
         };
       });
     },
 
     fruit0: '',
-    setFruit0: (fr: Fruit | '') => {
-      set(() => ({ fruit0: fr }));
-    },
+    setFruit0: (fr: Fruit | '') => set(() => ({ fruit0: fr })),
     fruit1: '',
-    setFruit1: (fr: Fruit | '') => {
-      set(() => ({ fruit1: fr }));
-    },
+    setFruit1: (fr: Fruit | '') => set(() => ({ fruit1: fr })),
     fruit2: '',
-    setFruit2: (fr: Fruit | '') => {
-      set(() => ({ fruit2: fr }));
-    },
+    setFruit2: (fr: Fruit | '') => set(() => ({ fruit2: fr })),
 
     showBars: false,
-    toggleBars: () => {
-      // Добавили (state: any)
-      set((state: any) => ({ showBars: !state.showBars }));
-    },
+    toggleBars: () => set((state: any) => ({ showBars: !state.showBars })),
 
     bet: 1,
     updateBet: (amount: number) => {
-      // Добавили (state: any)
       set((state: any) => {
         const newBet = state.bet + amount;
         const clampedBet = Math.max(1, Math.min(newBet, state.coins));
@@ -93,37 +79,40 @@ const useGame = create<State>()(
     },
 
     win: 0,
-    setWin: (amount: number) => {
-      set(() => ({ win: amount }));
-    },
+    setWin: (amount: number) => set(() => ({ win: amount })),
 
     spins: 0,
-    addSpin: () => {
-      // Добавили (state: any)
-      set((state: any) => ({ spins: state.spins + 1 }));
-    },
+    addSpin: () => set((state: any) => ({ spins: state.spins + 1 })),
 
     startTime: 0,
     endTime: 0,
 
     phase: 'idle',
+    /**
+     * ИСПРАВЛЕННАЯ ФУНКЦИЯ START
+     * Теперь она сама проверяет баланс и списывает ставку ОДИН раз
+     */
     start: () => {
-      // Добавили (state: any)
       set((state: any) => {
-        if (state.phase === 'idle') {
-          return { phase: 'spinning', startTime: Date.now() };
+        // Проверяем: если уже крутимся или денег меньше ставки — отменяем
+        if (state.phase !== 'idle' || state.coins < state.bet) {
+          return {};
         }
-        return {};
+
+        // Списываем ставку и меняем фазу
+        return { 
+          phase: 'spinning', 
+          startTime: Date.now(),
+          coins: state.coins - state.bet 
+        };
       });
     },
+
     end: () => {
-      // Добавили (state: any)
       set((state: any) => {
         if (state.phase === 'spinning') {
           const endTime = Date.now();
-          const startTime = state.startTime;
-          const elapsedTime = endTime - startTime;
-          devLog(`Time spinning: ${elapsedTime / 1000} seconds`);
+          devLog(`Time spinning: ${(endTime - state.startTime) / 1000}s`);
           return { phase: 'idle', endTime: endTime };
         }
         return {};
@@ -131,9 +120,7 @@ const useGame = create<State>()(
     },
 
     firstTime: true,
-    setFirstTime: (isFirstTime: boolean) => {
-      set(() => ({ firstTime: isFirstTime }));
-    },
+    setFirstTime: (isFirstTime: boolean) => set(() => ({ firstTime: isFirstTime })),
   }))
 );
 
