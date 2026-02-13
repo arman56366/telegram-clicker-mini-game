@@ -15,12 +15,13 @@ type State = {
   setModal: (isOpen: boolean) => void;
   coins: number;
   updateCoins: (amount: number) => void;
-  fruit0: Fruit | '';
-  setFruit0: (fr: Fruit | '') => void;
-  fruit1: Fruit | '';
-  setFruit1: (fr: Fruit | '') => void;
-  fruit2: Fruit | '';
-  setFruit2: (fr: Fruit | '') => void;
+  // Изменили тип: теперь это строго число (индекс фрукта)
+  fruit0: number; 
+  setFruit0: (fr: number) => void;
+  fruit1: number;
+  setFruit1: (fr: number) => void;
+  fruit2: number;
+  setFruit2: (fr: number) => void;
   showBars: boolean;
   toggleBars: () => void;
   bet: number;
@@ -40,7 +41,7 @@ type State = {
 
 const useGame = create<State>()(
   subscribeWithSelector((set: any) => ({
-    isMobile: window.innerWidth < 768,
+    isMobile: typeof window !== 'undefined' ? window.innerWidth < 768 : false,
     setIsMobile: (value: boolean) => set(() => ({ isMobile: value })),
 
     modal: false,
@@ -54,17 +55,19 @@ const useGame = create<State>()(
         const newCoins = state.coins + amount;
         return {
           coins: newCoins,
+          // Если денег стало меньше, чем текущая ставка, понижаем ставку
           bet: state.bet > newCoins ? Math.max(1, newCoins) : state.bet,
         };
       });
     },
 
-    fruit0: '',
-    setFruit0: (fr: Fruit | '') => set(() => ({ fruit0: fr })),
-    fruit1: '',
-    setFruit1: (fr: Fruit | '') => set(() => ({ fruit1: fr })),
-    fruit2: '',
-    setFruit2: (fr: Fruit | '') => set(() => ({ fruit2: fr })),
+    // НАЧАЛЬНЫЕ ЗНАЧЕНИЯ ТЕПЕРЬ 0 (ЧИСЛА), А НЕ ПУСТЫЕ СТРОКИ
+    fruit0: 0,
+    setFruit0: (fr: number) => set(() => ({ fruit0: fr })),
+    fruit1: 0,
+    setFruit1: (fr: number) => set(() => ({ fruit1: fr })),
+    fruit2: 0,
+    setFruit2: (fr: number) => set(() => ({ fruit2: fr })),
 
     showBars: false,
     toggleBars: () => set((state: any) => ({ showBars: !state.showBars })),
@@ -88,22 +91,18 @@ const useGame = create<State>()(
     endTime: 0,
 
     phase: 'idle',
-    /**
-     * ИСПРАВЛЕННАЯ ФУНКЦИЯ START
-     * Теперь она сама проверяет баланс и списывает ставку ОДИН раз
-     */
+
     start: () => {
       set((state: any) => {
-        // Проверяем: если уже крутимся или денег меньше ставки — отменяем
         if (state.phase !== 'idle' || state.coins < state.bet) {
           return {};
         }
 
-        // Списываем ставку и меняем фазу
         return { 
           phase: 'spinning', 
           startTime: Date.now(),
-          coins: state.coins - state.bet 
+          coins: state.coins - state.bet,
+          win: 0 // Сбрасываем старый выигрыш перед началом
         };
       });
     },
@@ -112,7 +111,7 @@ const useGame = create<State>()(
       set((state: any) => {
         if (state.phase === 'spinning') {
           const endTime = Date.now();
-          devLog(`Time spinning: ${(endTime - state.startTime) / 1000}s`);
+          devLog(`Spin ended. Duration: ${(endTime - state.startTime) / 1000}s`);
           return { phase: 'idle', endTime: endTime };
         }
         return {};
