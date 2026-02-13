@@ -1,171 +1,281 @@
 .interface {
   pointer-events: none;
-  z-index: 10;
-  position: absolute;
+  z-index: 1000;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  color: #fff;
-  font-family: 'Arial Black', Gadget, sans-serif;
+  color: var(--text-light);
+  font-family: 'Poppins', sans-serif;
 }
 
-/* Логотип (верхний левый угол) */
+/* ===== ЛОГОТИП (верхний левый угол) ===== */
 #logo-section {
   display: flex;
   flex-direction: column;
   position: fixed;
-  top: 0;
-  left: 0;
+  top: 20px;
+  left: 20px;
   z-index: 5;
-  margin: 1em;
   pointer-events: none;
 }
 
 .logo {
-  width: min(250px, 20vw);
-  transform: rotate(-5deg);
+  width: min(220px, 18vw);
+  filter: drop-shadow(0 8px 16px rgba(99, 102, 241, 0.3));
 }
 
 #version {
-  color: #f7f7f7;
-  font-family: monospace;
-  font-size: 12px;
-  margin-left: 20px;
-  animation: fadeOut 1s ease 10s forwards;
+  color: var(--text-muted);
+  font-family: 'Inter', monospace;
+  font-size: 11px;
+  margin-top: 8px;
+  font-weight: 500;
+  opacity: 0.7;
 }
 
-/* Общий контейнер для всех нижних элементов */
+/* ===== ОБЩИЕ СТИЛИ ===== */
 .win-section, .coins-section, .spin-container, .bet-section {
   position: fixed;
-  pointer-events: auto; /* Возвращаем кликабельность кнопкам */
+  pointer-events: auto;
 }
 
-/* Выигрыш (слева внизу) */
+/* ===== ВЫИГРЫШ (слева внизу) ===== */
 .win-section {
-  bottom: 20px;
-  left: 20px;
+  bottom: 30px;
+  left: 30px;
   text-align: left;
+  z-index: 1001;
 }
 
 .win-number {
-  font-size: min(45px, 6vw);
-  text-shadow: 3px 3px 0px #6913c5;
+  font-size: min(48px, 7vw);
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--success) 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.3));
 }
 
-/* Баланс (справа внизу) */
+/* ===== БАЛАНС МОНЕТ (справа внизу) ===== */
 .coins-section {
-  bottom: 20px;
-  right: 20px;
+  bottom: 30px;
+  right: 30px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  position: relative;
+  gap: 12px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.7);
+  padding: 15px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
 }
 
 .coins-number {
-  font-size: min(45px, 6vw);
-  text-shadow: 3px 3px 0px #6913c5;
+  font-size: min(48px, 7vw);
+  font-weight: 900;
+  color: #fef3c7;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.6), 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .coins-image {
-  width: min(50px, 7vw);
+  width: min(48px, 6vw);
+  filter: drop-shadow(0 2px 8px rgba(245, 158, 11, 0.4));
+  animation: bounce 2s infinite;
 }
 
-/* Кнопка добавления монет */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* ===== КНОПКА ДОБАВЛЕНИЯ МОНЕТ ===== */
 .add-coins-btn {
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, #fbbf24 100%);
   color: #000;
   border: none;
-  width: min(45px, 6vw);
-  height: min(45px, 6vw);
+  width: min(50px, 7vw);
+  height: min(50px, 7vw);
   border-radius: 50%;
-  font-size: min(28px, 4vw);
+  font-size: min(30px, 5vw);
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4), inset -2px -2px 4px rgba(0,0,0,0.2);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   -webkit-user-select: none;
   user-select: none;
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .add-coins-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+  transform: scale(1.12) translateY(-4px);
+  box-shadow: 0 12px 32px rgba(245, 158, 11, 0.5), inset -2px -2px 4px rgba(0,0,0,0.2);
 }
 
 .add-coins-btn:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 10px rgba(255, 215, 0, 0.4);
+  transform: scale(1.05) translateY(0);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3), inset -2px -2px 4px rgba(0,0,0,0.2);
 }
 
-/* Кнопка SPIN (центр) */
+/* ===== КНОПКА SPIN (центр) ===== */
 .spin-container {
-  bottom: 80px; /* Поднимаем над ставкой */
+  bottom: 140px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 20;
+  z-index: 1001;
 }
 
 .spin-button {
-  background: #ffc400;
-  color: #6913c5;
-  border: 4px solid #fff;
-  padding: 15px 60px;
-  font-size: min(35px, 8vw);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: #fff;
+  border: none;
+  padding: 18px 80px;
+  font-size: min(38px, 8vw);
   font-weight: 900;
-  border-radius: 50px;
+  letter-spacing: 1px;
+  border-radius: 60px;
   cursor: pointer;
-  box-shadow: 0 8px 0px #b48a00, 0 15px 20px rgba(0,0,0,0.4);
-  transition: all 0.1s;
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4), inset -2px -2px 4px rgba(0,0,0,0.2);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+
+.spin-button::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.spin-button:hover:not(:disabled) {
+  transform: translateY(-6px) scale(1.05);
+  box-shadow: 0 16px 40px rgba(99, 102, 241, 0.5), inset -2px -2px 4px rgba(0,0,0,0.2);
+}
+
+.spin-button:hover:not(:disabled)::before {
+  opacity: 1;
 }
 
 .spin-button:active:not(:disabled) {
-  transform: translateY(4px);
-  box-shadow: 0 4px 0px #b48a00;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4), inset -2px -2px 4px rgba(0,0,0,0.2);
 }
 
 .spin-button:disabled {
-  background: #888;
-  color: #aaa;
-  border-color: #666;
-  box-shadow: none;
+  background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+  color: #94a3b8;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   cursor: not-allowed;
-  transform: translateY(4px);
+  opacity: 0.7;
 }
 
-/* Ставка (прямо под кнопкой SPIN) */
+/* ===== СТАВКА (под кнопкой SPIN) ===== */
 .bet-section {
-  bottom: 20px;
+  bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 15px;
-  font-size: min(30px, 5vw);
-  text-shadow: 2px 2px 0px #6913c5;
+  gap: 20px;
+  font-size: min(28px, 5vw);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.7);
+  z-index: 1001;
+  padding: 15px 30px;
+  border-radius: 20px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.bet-label {
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: min(18px, 3vw);
+}
+
+.bet-amount {
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  min-width: 60px;
+  text-align: center;
+}
+
+#bet-controls {
+  display: flex;
+  gap: 8px;
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+#bet-controls.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .bet-control {
-  font-size: 40px;
+  width: min(40px, 5vw);
+  height: min(40px, 5vw);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 800;
+  font-size: min(20px, 4vw);
   cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
-  transition: color 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  pointer-events: auto;
 }
 
 .bet-control:hover {
-  color: #ffc400;
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
 }
 
-.hidden {
-  display: none;
+.bet-control:active {
+  transform: translateY(0) scale(1);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
 }
 
-@keyframes fadeOut {
-  to { opacity: 0; visibility: hidden; }
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 768px) {
+  .logo {
+    width: min(180px, 25vw);
+  }
+
+  .spin-button {
+    padding: 14px 50px;
+  }
+
+  .coins-section,
+  .bet-section {
+    padding: 12px 16px;
+    gap: 10px;
+  }
 }

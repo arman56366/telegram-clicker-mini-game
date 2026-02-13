@@ -15,7 +15,7 @@ interface SlotMachineHandle {
   reelRefs: React.RefObject<ReelGroup | null>[];
 }
 
-const ITEMS = 6;
+const ITEMS = 3;
 const SEGMENT_ANGLE = (Math.PI * 2) / ITEMS;
 
 // ⚠ если будет лёгкое смещение — поменяй 1.57 на 1.55–1.6
@@ -49,7 +49,7 @@ const SlotMachine = forwardRef<SlotMachineHandle>((_props, ref) => {
     phaseRef.current = phase;
   }, [phase]);
 
-  const payTable = [50, 20, 15, 10, 5, 2];
+  const payTable = [50, 20, 15]; // 🍒 🍎 🍌
 
   // 🎰 Генерация результатов
   const generateSpinResults = useCallback(() => {
@@ -57,11 +57,15 @@ const SlotMachine = forwardRef<SlotMachineHandle>((_props, ref) => {
     let res: number[] = [0, 0, 0];
     let prize = 0;
 
-    if (randomValue < 0.15) {
+    if (randomValue < 0.005) {
+      // 0.5% - ДЖЕКПОТ! Все три одинаковые
       const winner = Math.floor(Math.random() * ITEMS);
       res = [winner, winner, winner];
+      
+      // Платим ровно по таблице, логично и понятно
       prize = (payTable[winner] || 2) * bet;
     } else {
+      // 99.5% - обычный спин, не совпадают
       res[0] = Math.floor(Math.random() * ITEMS);
       res[1] = Math.floor(Math.random() * ITEMS);
 
@@ -122,6 +126,7 @@ const SlotMachine = forwardRef<SlotMachineHandle>((_props, ref) => {
   // 🎥 Анимация
   useFrame((_state, delta) => {
     let active = false;
+    const MAX_SPIN_TIME = 5000; // макс 5 сек для одного барабана
 
     for (let i = 0; i < reelRefs.length; i++) {
       const reel = reelRefs[i].current;
@@ -131,22 +136,33 @@ const SlotMachine = forwardRef<SlotMachineHandle>((_props, ref) => {
 
       reel.elapsedTime! += delta * 1000;
 
+      // Фаза 1: быстрое вращение до остановки
       if (reel.elapsedTime! < (reel.stopDelay || 0)) {
         reel.rotation.x += 18 * delta;
         continue;
       }
 
-      const diff = reel.targetRotationX - reel.rotation.x;
+      // Нормализуем разницу углов в диапазон -π...π
+      let diff = reel.targetRotationX - reel.rotation.x;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
 
-      if (Math.abs(diff) > 0.5) {
-        reel.rotation.x += 20 * delta;
-      } else if (Math.abs(diff) > 0.01) {
-        reel.rotation.x = THREE.MathUtils.lerp(
-          reel.rotation.x,
-          reel.targetRotationX,
-          0.1
-        );
+      // Если прошло слишком много времени, принудительно остановить
+      if (reel.elapsedTime! > (reel.stopDelay || 0) + MAX_SPIN_TIME) {
+        reel.rotation.x = reel.targetRotationX;
+        reel.targetRotationX = undefined;
+        continue;
+      }
+
+      // Фаза 2: плавное замедление к цели
+      if (Math.abs(diff) > 0.1) {
+        // Еще далеко - продолжаем быстрое вращение
+        reel.rotation.x += 15 * delta * Math.sign(diff);
+      } else if (Math.abs(diff) > 0.005) {
+        // Близко - плавное приближение
+        reel.rotation.x += diff * 0.08;
       } else {
+        // Очень близко - зафиксируем финальную позицию
         reel.rotation.x = reel.targetRotationX;
         reel.targetRotationX = undefined;
       }

@@ -1,25 +1,45 @@
 .gameScreen {
-  max-width: 600px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
   text-align: center;
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(2, 6, 23, 0.8) 100%);
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 60px rgba(99, 102, 241, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  min-height: 100vh;
 }
 
 .error {
   text-align: center;
-  padding: 20px;
-  font-family: Arial, sans-serif;
+  padding: 40px 20px;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.95) 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 
   h1 {
-    color: #ff5722;
-    font-size: 24px;
+    color: #ef4444;
+    font-size: 42px;
+    font-weight: 900;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   p {
-    color: #333;
-    font-size: 16px;
+    color: #94a3b8;
+    font-size: 18px;
+    max-width: 500px;
+    line-height: 1.6;
   }
 }

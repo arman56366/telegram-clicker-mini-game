@@ -18,6 +18,7 @@ import { Canvas } from '@react-three/fiber';
 import Interface from './interface/Interface';
 import Game from './Game';
 import useGame from './stores/store';
+import './styles/animations.css';
 
 const App = () => {
   /** * Добавляем тип : any для state, чтобы устранить ошибку TS7006. 
