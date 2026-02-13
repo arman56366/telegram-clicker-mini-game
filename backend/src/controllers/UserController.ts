@@ -50,15 +50,17 @@ export class UserController {
     const { coins } = req.body
 
     try {
-      if (typeof id !== "number") {
-        return res.status(400).json({ error: "Invalid user" })
+      // Валидация: id из params всегда строка
+      const userId = Number(id)
+      if (!Number.isInteger(userId) || userId <= 0) {
+        return res.status(400).json({ error: "Invalid user ID" })
       }
 
-      if (typeof coins !== "number") {
+      if (typeof coins !== "number" || !Number.isInteger(coins)) {
         return res.status(400).json({ error: "Invalid coins value" })
       }
 
-      const user = await this.userModel.updateUserCoins(Number(id), Number(coins))
+      const user = await this.userModel.updateUserCoins(userId, coins)
 
       if (!user) {
         return res.status(404).json({ error: "User not found" })

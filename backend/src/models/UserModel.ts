@@ -24,7 +24,15 @@ export class UserModel {
   }
 
   async updateUserCoins(id: number, coins: number): Promise<User> {
-    const result = await this.pool.query("UPDATE users SET coins = $1 WHERE id = $2 RETURNING *", [coins, id])
+    // Проверяем, что пользователь существует
+    const userCheck = await this.pool.query("SELECT * FROM users WHERE id = $1", [id])
+    if (!userCheck.rows[0]) {
+      throw new Error("User not found")
+    }
+    
+    // Не позволяем отрицательное количество монет
+    const finalCoins = Math.max(0, coins)
+    const result = await this.pool.query("UPDATE users SET coins = $1 WHERE id = $2 RETURNING *", [finalCoins, id])
     return result.rows[0]
   }
 }
