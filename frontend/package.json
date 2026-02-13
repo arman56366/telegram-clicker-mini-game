@@ -17,6 +17,7 @@
     "sass": "^1.69.0",
     "three": "^0.150.0",
     "three-stdlib": "^2.21.8",
+    "vite-plugin-svgr": "^4.3.0",
     "zustand": "^4.3.3"
   },
   "devDependencies": {
@@ -26,5 +27,8 @@
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "~5.6.2",
     "vite": "^6.0.1"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
