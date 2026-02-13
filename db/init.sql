@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS promotions (
     start_date TIMESTAMP NOT NULL,
     end_date TIMESTAMP NOT NULL,
     reward_coins BIGINT NOT NULL,
-    reward_crystals BIGINT NOT NULL
+    reward_crystals BIGINT NOT NULL,
     is_active BOOLEAN DEFAULT FALSE
 );
 
