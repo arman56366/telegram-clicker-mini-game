@@ -44,12 +44,12 @@ const useGame = create<State>()(
     isMobile: typeof window !== 'undefined' ? window.innerWidth < 768 : false,
     setIsMobile: (value: boolean) => set(() => ({ isMobile: value })),
 
-    modal: false,
+    modal: false as boolean,
     setModal: (isOpen: boolean) => {
       set(() => ({ modal: isOpen }));
     },
 
-    coins: 100,
+    coins: 0,
     updateCoins: (amount: number) => {
       set((state: any) => {
         const newCoins = state.coins + amount;
@@ -69,7 +69,7 @@ const useGame = create<State>()(
     fruit2: 0,
     setFruit2: (fr: number) => set(() => ({ fruit2: fr })),
 
-    showBars: false,
+    showBars: false as boolean,
     toggleBars: () => set((state: any) => ({ showBars: !state.showBars })),
 
     bet: 1,
@@ -90,7 +90,7 @@ const useGame = create<State>()(
     startTime: 0,
     endTime: 0,
 
-    phase: 'idle',
+    phase: 'idle' as const,
 
     start: () => {
       set((state: any) => {
@@ -118,9 +118,8 @@ const useGame = create<State>()(
       });
     },
 
-    firstTime: true,
+    firstTime: true as boolean,
     setFirstTime: (isFirstTime: boolean) => set(() => ({ firstTime: isFirstTime })),
-  }))
-);
+  })) as any);
 
 export default useGame;
