@@ -10,7 +10,6 @@ import useAnimatedNumber from '../hooks/useAnimatedNumber';
 import './style.css';
 
 const Interface = () => {
-  // Добавляем 'start' в деструктуризацию, чтобы кнопка могла запускать игру
   const { modal, coins, win, bet, phase, updateBet, start } = useGame(
     (state: any) => state
   );
@@ -19,66 +18,47 @@ const Interface = () => {
 
   return (
     <>
-      {/* Help Button */}
       <HelpButton />
-
-      {/* Modal */}
       {modal && <HelpModal />}
 
-      {/* Logo */}
+      {/* Логотип теперь БЕЗ ссылки на гитхаб, чтобы не мешать кликам */}
       <div id="logo-section">
-        <a
-          href="https://github.com/michaelkolesidis/cherry-charm"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <img className="logo" src="./images/logo.png" alt="Logo" />
-        </a>
-
+        <img className="logo" src="./images/logo.png" alt="Logo" />
         <div id="version">{"1.0.0"}</div>
       </div>
 
       <div className="interface">
-        {/* Coins */}
+        {/* Баланс монет */}
         <div className="coins-section">
           <div className="coins-number">{animatedCoins}</div>
           <img className="coins-image" src="./images/coin.png" alt="coin" />
         </div>
 
-        {/* Bet */}
+        {/* Ставка и кнопки управления */}
         <div className="bet-section">
           <div className="bet-label">BET:</div>
           <div className="bet-amount">{bet}</div>
           <div id="bet-controls" className={phase === 'idle' ? '' : 'hidden'}>
-            <div
-              id="increase-bet"
-              className="bet-control"
-              onClick={() => updateBet(1)}
-            >
-              ⏶
-            </div>
-            <div
-              id="decrease-bet"
-              className="bet-control"
-              onClick={() => updateBet(-1)}
-            >
-              ⏷
-            </div>
+            <div className="bet-control" onClick={() => updateBet(1)}>⏶</div>
+            <div className="bet-control" onClick={() => updateBet(-1)}>⏷</div>
           </div>
         </div>
 
-        {/* КНОПКА SPIN — Добавлена сюда */}
-        <div className="spin-section">
+        {/* Кнопка SPIN — добавлена отдельно с защитой от случайных переходов */}
+        <div className="spin-container">
           <button 
-            className={`spin-button ${phase !== 'idle' ? 'disabled' : ''}`}
-            onClick={start}
+            className="spin-button"
+            onClick={(e) => {
+              e.stopPropagation(); // Останавливает всплытие клика
+              start();
+            }}
             disabled={phase !== 'idle' || coins < bet}
           >
             {phase === 'spinning' ? '...' : 'SPIN'}
           </button>
         </div>
 
-        {/* Win */}
+        {/* Выигрыш */}
         <div className="win-section">
           <div className="win-number">WIN: {win}</div>
         </div>
