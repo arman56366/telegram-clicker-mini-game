@@ -1,9 +1,4 @@
-/*
- * Copyright (c) Michael Kolesidis <michael.kolesidis@gmail.com>
- * GNU Affero General Public License v3.0
- */
-
-import { useRef } from 'react';
+import { useRef, Suspense } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from '@react-three/drei';
 import Lights from './lights/Lights';
@@ -17,20 +12,18 @@ const Game = () => {
 
   return (
     <>
-      {/* Фон сцены */}
       <color args={['#141417']} attach="background" />
       
-      {/* Управление камерой (зум отключен для стабильности) */}
       <OrbitControls enableZoom={false} />
       
-      {/* Освещение */}
+      {/* Обязательно добавляем освещение, иначе модели будут черными */}
       <Lights />
       
-      {/* Сетка/бары (если включены в меню) */}
-      {showBars && <Bars />}
-      
-      {/* Основной компонент игры, где теперь живет вся логика */}
-      <SlotMachine ref={slotMachineRef} />
+      {/* Suspense показывает заглушку (null), пока грузятся модели и текстуры */}
+      <Suspense fallback={null}>
+        {showBars && <Bars />}
+        <SlotMachine ref={slotMachineRef} />
+      </Suspense>
     </>
   );
 };
