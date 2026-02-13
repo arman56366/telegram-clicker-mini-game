@@ -27,9 +27,13 @@ const SlotMachine = forwardRef((_props, ref) => {
   const payTable = [50, 20, 15, 5, 2, 1];
 
   const spinSlotMachine = () => {
-    if (phase === 'spinning' || coins < bet) return;
+    // ВАЖНО: Убираем проверку на фазу 'spinning' внутри этой функции, 
+    // так как она теперь может вызываться, когда фаза уже изменена Interface.tsx
+    if (coins < bet) return;
 
-    start(); 
+    // Если фаза еще не 'spinning' (нажатие через 3D кнопку или Space), запускаем её
+    if (phase !== 'spinning') start(); 
+    
     addSpin();
     setWin(0);
 
@@ -75,18 +79,34 @@ const SlotMachine = forwardRef((_props, ref) => {
     }
   };
 
+  // ЭТОТ БЛОК СВЯЗЫВАЕТ ВАШУ КНОПКУ ИЗ INTERFACE.TSX С БАРАБАНАМИ
+  useEffect(() => {
+    // Проверяем, крутятся ли уже барабаны
+    const isAnyReelMoving = reelRefs.some(r => r.current?.targetRotationX !== undefined);
+
+    // Если кнопка в Interface нажала start(), фаза стала 'spinning', 
+    // но физическое вращение еще не началось — запускаем его
+    if (phase === 'spinning' && !isAnyReelMoving) {
+      spinSlotMachine();
+    }
+  }, [phase]);
+
   useFrame((_state, delta) => {
     let allFinished = true;
     for (let i = 0; i < reelRefs.length; i++) {
       const reel = reelRefs[i].current;
       if (!reel || reel.targetRotationX === undefined) continue;
+      
       allFinished = false;
       const remaining = reel.targetRotationX - reel.rotation.x;
 
       if (!reel.isSnapping) {
         const speed = Math.max(remaining * 4, 15) * delta;
-        if (remaining > 0.1) { reel.rotation.x += speed; } 
-        else { reel.isSnapping = true; }
+        if (remaining > 0.1) { 
+          reel.rotation.x += speed; 
+        } else { 
+          reel.isSnapping = true; 
+        }
       } else {
         reel.rotation.x = THREE.MathUtils.lerp(reel.rotation.x, reel.targetRotationX, 0.12);
         if (Math.abs(reel.rotation.x - reel.targetRotationX) < 0.005) {
@@ -95,11 +115,18 @@ const SlotMachine = forwardRef((_props, ref) => {
         }
       }
     }
-    if (allFinished && phase === 'spinning') end();
+    
+    // Завершаем фазу в сторе, когда все барабаны встали
+    if (allFinished && phase === 'spinning') {
+      const isActuallyMoving = reelRefs.some(r => r.current?.targetRotationX !== undefined);
+      if (!isActuallyMoving) end();
+    }
   });
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => { if (e.code === 'Space') spinSlotMachine(); };
+    const handleKeyDown = (e: KeyboardEvent) => { 
+      if (e.code === 'Space' && phase === 'idle') spinSlotMachine(); 
+    };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [phase, coins, bet]);
@@ -111,6 +138,8 @@ const SlotMachine = forwardRef((_props, ref) => {
       <Reel ref={reelRefs[0]} map={0} position={[-7, 0, 0]} scale={[10, 10, 10]} />
       <Reel ref={reelRefs[1]} map={1} position={[0, 0, 0]} scale={[10, 10, 10]} />
       <Reel ref={reelRefs[2]} map={2} position={[7, 0, 0]} scale={[10, 10, 10]} />
+      
+      {/* 3D Кнопка (можешь удалить, если пользуешься только фиолетовой в Interface) */}
       <Button scale={[0.05, 0.04, 0.04]} position={[0, -13, 0]} onClick={spinSlotMachine} />
     </>
   );
